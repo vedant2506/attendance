@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Teacher Dashboard</h2>
+        <p>Project this screen. Students should scan this QR code.</p>
+        <div id="qrcode-container" style="display: block; border: none;">
+            <div id="qrcode"></div>
+        </div>
+
+        <button id="view-report-btn">View Attendance Report</button>
+        
+        <div id="summary-container" style="display: none;">
+            <h2>Session Summary</h2>
+            <div class="summary-details">
+                <p><strong>Total Present:</strong> <span id="total-present"></span> / 78</p>
+                <p><strong>Total Absent:</strong> <span id="total-absent"></span> / 78</p>
+            </div>
+            <div class="absent-list">
+                <h3>Absent Roll Numbers:</h3>
+                <p id="absent-list"></p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="teacher.js"></script>
+</body>
+</html>
