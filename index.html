@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="student-login-view">
+            <h1>QuickAttend</h1>
+            <p>Please enter your class Roll Number to continue.</p>
+            <input type="number" id="student-roll-input" placeholder="Enter Your Roll Number (1-78)">
+            <button id="student-login-btn">Log In</button>
+        </div>
+        
+        <div id="student-dashboard" style="display: none;">
+            <h2 id="logged-in-student"></h2>
+            <div id="scanner-container" style="display: none;">
+                <video id="scanner-video"></video>
+            </div>
+            <button id="scan-btn">Scan Attendance QR Code</button>
+            <p id="scan-result"></p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="student.js"></script>
+</body>
+</html>
