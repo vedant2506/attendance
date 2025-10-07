@@ -38,7 +38,7 @@ studentLoginBtn.addEventListener('click', () => {
 // --- QR Scanning ---
 scanBtn.addEventListener('click', startScanner);
 
-async function handleScanResult(data) {
+async function handleScanResult(scannedData) {
     stopScanner();
     const rollNo = sessionStorage.getItem('loggedInStudentRoll');
     if (!rollNo) {
@@ -46,12 +46,28 @@ async function handleScanResult(data) {
         return;
     }
 
-    // This is our simple, static check
-    if (data !== "CS101-ATTENDANCE-CODE") {
-        scanResultEl.textContent = 'Invalid QR Code scanned. Please scan the code from the board.';
+    // --- NEW: TIME-BASED QR CODE VALIDATION ---
+    const VALIDITY_PERIOD_MS = 17000; // 17 seconds (gives a 2-second buffer)
+    const parts = scannedData.split('|');
+
+    // 1. Check if the code format is correct
+    if (parts.length !== 2 || parts[0] !== 'CS101-ATTENDANCE') {
+        scanResultEl.textContent = 'Invalid QR Code. Please scan the code from the board.';
         scanResultEl.className = 'result-error';
         return;
     }
+
+    // 2. Check if the code has expired
+    const qrTimestamp = parseInt(parts[1], 10);
+    const codeAge = Date.now() - qrTimestamp;
+
+    if (isNaN(qrTimestamp) || codeAge > VALIDITY_PERIOD_MS) {
+        scanResultEl.textContent = 'Expired QR Code. Please scan the new code from the board.';
+        scanResultEl.className = 'result-error';
+        return;
+    }
+    // --- END NEW VALIDATION ---
+
 
     // Check if already marked present
     const { data: existing, error: checkError } = await db.from('records').select().eq('roll_no', rollNo);
