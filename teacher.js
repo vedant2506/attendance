@@ -8,29 +8,75 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- DOM Elements ---
 const qrcodeEl = document.getElementById('qrcode');
+const timerEl = document.getElementById('timer'); // Make sure you have this in teacher.html
 const viewReportBtn = document.getElementById('view-report-btn');
 const summaryContainer = document.getElementById('summary-container');
 const absentListEl = document.getElementById('absent-list');
 const totalPresentEl = document.getElementById('total-present');
 const totalAbsentEl = document.getElementById('total-absent');
 
-// The simple, static data for the QR code
-const qrData = "CS101-ATTENDANCE-CODE";
+const CODE_REFRESH_INTERVAL = 15; // seconds
+let countdown = CODE_REFRESH_INTERVAL;
+let qrCodeInstance = null; // To hold the QRCode.js instance
 
-// Generate the QR code as soon as the page loads
-new QRCode(qrcodeEl, { text: qrData, width: 256, height: 256 });
+/**
+ * Generates a unique, time-stamped code and displays it as a QR code.
+ */
+function generateAndDisplayQRCode() {
+    // 1. Generate a new code with the current timestamp embedded
+    const newCode = `CS101-ATTENDANCE|${Date.now()}`;
+    
+    // 2. Clear the old QR code and display the new one
+    qrcodeEl.innerHTML = ''; // Clear previous QR code
+    qrCodeInstance = new QRCode(qrcodeEl, {
+        text: newCode,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+}
 
+/**
+ * Manages the countdown timer and triggers QR code regeneration.
+ */
+function startTimer() {
+    // Add the timer element if it's missing from the HTML for some reason
+    if (!timerEl) {
+        const p = document.createElement('p');
+        p.id = 'timer';
+        qrcodeEl.insertAdjacentElement('afterend', p);
+    }
+
+    setInterval(() => {
+        countdown--;
+        timerEl.textContent = `New code in ${countdown} seconds...`;
+        if (countdown <= 0) {
+            countdown = CODE_REFRESH_INTERVAL; // Reset timer
+            generateAndDisplayQRCode();
+        }
+    }, 1000); // Run every second
+}
+
+
+// --- Initial Page Load ---
+document.addEventListener('DOMContentLoaded', () => {
+    generateAndDisplayQRCode(); // Generate the first QR code immediately
+    startTimer(); // Start the 15-second refresh cycle
+});
+
+
+// --- Report Logic (Unchanged)---
 const classRoster = [];
 for (let i = 1; i <= 78; i++) {
     classRoster.push({ rollNo: i.toString() });
 }
 
-// --- Report Logic ---
 viewReportBtn.addEventListener('click', async () => {
     viewReportBtn.textContent = 'Loading Report...';
     viewReportBtn.disabled = true;
 
-    // Fetch all records from the database
     const { data: presentRecords, error } = await db.from('records').select('roll_no');
 
     if (error) {
@@ -43,7 +89,6 @@ viewReportBtn.addEventListener('click', async () => {
     const absentStudents = classRoster.filter(student => !presentRollNos.includes(student.rollNo));
     const absentRollNos = absentStudents.map(student => student.rollNo);
 
-    // Display the results
     totalPresentEl.textContent = presentRollNos.length;
     totalAbsentEl.textContent = absentRollNos.length;
     
