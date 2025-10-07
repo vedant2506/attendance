@@ -7,51 +7,43 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- DOM Elements ---
-const qrcodeEl = document.getElementById('qrcode');
-const timerEl = document.getElementById('timer'); // Make sure you have this in teacher.html
-const viewReportBtn = document.getElementById('view-report-btn');
-const summaryContainer = document.getElementById('summary-container');
-const absentListEl = document.getElementById('absent-list');
-const totalPresentEl = document.getElementById('total-present');
-const totalAbsentEl = document.getElementById('total-absent');
+// We will define these inside the DOMContentLoaded listener to ensure they exist.
+let qrcodeEl, timerEl, viewReportBtn, summaryContainer, absentListEl, totalPresentEl, totalAbsentEl;
 
 const CODE_REFRESH_INTERVAL = 15; // seconds
 let countdown = CODE_REFRESH_INTERVAL;
-let qrCodeInstance = null; // To hold the QRCode.js instance
+let qrCodeInstance = null; 
 
 /**
  * Generates a unique, time-stamped code and displays it as a QR code.
  */
 function generateAndDisplayQRCode() {
-    // 1. Generate a new code with the current timestamp embedded
     const newCode = `CS101-ATTENDANCE|${Date.now()}`;
     
-    // 2. Clear the old QR code and display the new one
-    qrcodeEl.innerHTML = ''; // Clear previous QR code
-    qrCodeInstance = new QRCode(qrcodeEl, {
-        text: newCode,
-        width: 256,
-        height: 256,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-    });
+    // Clear the old QR code and display the new one
+    if (qrcodeEl) {
+        qrcodeEl.innerHTML = ''; 
+        qrCodeInstance = new QRCode(qrcodeEl, {
+            text: newCode,
+            width: 256,
+            height: 256,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
 }
 
 /**
  * Manages the countdown timer and triggers QR code regeneration.
  */
 function startTimer() {
-    // Add the timer element if it's missing from the HTML for some reason
-    if (!timerEl) {
-        const p = document.createElement('p');
-        p.id = 'timer';
-        qrcodeEl.insertAdjacentElement('afterend', p);
-    }
-
     setInterval(() => {
         countdown--;
-        timerEl.textContent = `New code in ${countdown} seconds...`;
+        // Check if timerEl exists before trying to use it
+        if (timerEl) {
+            timerEl.textContent = `New code in ${countdown} seconds...`;
+        }
         if (countdown <= 0) {
             countdown = CODE_REFRESH_INTERVAL; // Reset timer
             generateAndDisplayQRCode();
@@ -59,21 +51,33 @@ function startTimer() {
     }, 1000); // Run every second
 }
 
-
 // --- Initial Page Load ---
+// Use DOMContentLoaded to make sure the HTML is fully loaded before running script
 document.addEventListener('DOMContentLoaded', () => {
+    // Now, it's safe to get the elements
+    qrcodeEl = document.getElementById('qrcode');
+    timerEl = document.getElementById('timer');
+    viewReportBtn = document.getElementById('view-report-btn');
+    summaryContainer = document.getElementById('summary-container');
+    absentListEl = document.getElementById('absent-list');
+    totalPresentEl = document.getElementById('total-present');
+    totalAbsentEl = document.getElementById('total-absent');
+
+    // Attach event listeners here
+    viewReportBtn.addEventListener('click', showReport);
+
+    // Start the QR code logic
     generateAndDisplayQRCode(); // Generate the first QR code immediately
     startTimer(); // Start the 15-second refresh cycle
 });
 
-
-// --- Report Logic (Unchanged)---
+// --- Report Logic ---
 const classRoster = [];
 for (let i = 1; i <= 78; i++) {
     classRoster.push({ rollNo: i.toString() });
 }
 
-viewReportBtn.addEventListener('click', async () => {
+async function showReport() {
     viewReportBtn.textContent = 'Loading Report...';
     viewReportBtn.disabled = true;
 
@@ -82,6 +86,8 @@ viewReportBtn.addEventListener('click', async () => {
     if (error) {
         alert('Error fetching report. Check the console.');
         console.error('Fetch error:', error);
+        viewReportBtn.textContent = 'View Attendance Report';
+        viewReportBtn.disabled = false;
         return;
     }
 
@@ -100,4 +106,4 @@ viewReportBtn.addEventListener('click', async () => {
 
     summaryContainer.style.display = 'block';
     viewReportBtn.style.display = 'none';
-});
+}
